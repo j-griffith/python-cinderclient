@@ -2690,3 +2690,122 @@ def do_api_version(cs, args):
     columns = ['ID', 'Status', 'Version', 'Min_version']
     response = cs.services.server_api_version()
     utils.print_list(response, columns)
+
+
+@utils.arg('volume',
+           metavar='<volume>',
+           help='Name or ID of volume or volumes to attach.')
+@utils.arg('--initiator',
+           metavar='<initiator>',
+           default=None,
+           help='iqn of the initiator attaching to.  Default=None.')
+@utils.arg('--ip',
+           metavar='<ip>',
+           default=None,
+           help='ip of the system attaching to.  Default=None.')
+@utils.arg('--host',
+           metavar='<host>',
+           default=None,
+           help='Name of the host attaching to. Default=None.')
+@utils.arg('--platform',
+           metavar='<platform>',
+           default='x86_64',
+           help='Platform type. Default=x86_64.')
+@utils.arg('--ostype',
+           metavar='<ostype>',
+           default='linux2',
+           help='OS type. Default=linux2.')
+@utils.arg('--multipath',
+           metavar='<multipath>',
+           default=False,
+           help='OS type. Default=False.')
+@utils.arg('--instance',
+           metavar='<instance>',
+           default=None,
+           help='UUID of Instance attaching to. Default=None.')
+@utils.arg('--mountpoint',
+           metavar='<mountpoint>',
+           default=None,
+           help='Mountpoint volume will be attached at. Default=None.')
+@utils.service_type('volumev3')
+def do_create_attachment(cs, args):
+    """Create an attachment for a cinder volume."""
+    connector = {'initiator': args.initiator,
+                 'ip': args.ip,
+                 'platform': args.platform,
+                 'host': args.host,
+                 'os_type': args.ostype,
+                 'multipath': args.multipath}
+    attachment = cs.volumes.create_attachment(args.volume,
+                                              connector,
+                                              args.instance,
+                                              args.mountpoint)
+    utils.print_dict(attachment)
+
+
+@utils.arg('volume',
+           metavar='<volume>',
+           help='Name or ID of volume or volumes to attach.')
+@utils.arg('--initiator',
+           metavar='<initiator>',
+           default=None,
+           help='iqn of the initiator attaching to.  Default=None.')
+@utils.arg('--ip',
+           metavar='<ip>',
+           default=None,
+           help='ip of the system attaching to.  Default=None.')
+@utils.arg('--host',
+           metavar='<host>',
+           default=None,
+           help='Name of the host attaching to. Default=None.')
+@utils.arg('--platform',
+           metavar='<platform>',
+           default='x86_64',
+           help='Platform type. Default=x86_64.')
+@utils.arg('--os_type',
+           metavar='<os_type>',
+           default='linux2',
+           help='OS type. Default=linux2.')
+@utils.arg('--multipath',
+           metavar='<multipath>',
+           default=False,
+           help='OS type. Default=False.')
+@utils.arg('--instance',
+           metavar='<instance>',
+           default=None,
+           help='UUID of Instance attaching to. Default=None.')
+@utils.arg('--mountpoint',
+           metavar='<mountpoint>',
+           default=None,
+           help='Mountpoint volume will be attached at. Default=None.')
+@utils.service_type('volumev3')
+def do_remove_attachment(cs, args):
+    """Remove an attachment for a cinder volume.
+
+    Returns a list of remaining attachments for the
+    specified volume
+
+    """
+    connector = {'initiator': args.initiator,
+                 'ip': args.ip,
+                 'platform': args.platform,
+                 'host': args.host,
+                 'os_type': args.os_type,
+                 'multipath': args.multipath}
+    attachments = cs.volumes.remove_attachment(args.volume,
+                                               connector,
+                                               args.instance,
+                                               args.mountpoint)
+    for att in attachments:
+        utils.print_dict(att)
+
+
+@utils.arg('volume',
+           metavar='<volume>',
+           help='Name or ID of volume or volumes to attach.')
+@utils.service_type('volumev3')
+def do_list_attachments(cs, args):
+    """List active attachments for a cinder volume."""
+    attachments = cs.volumes.list_attachments(args.volume)
+    for att in attachments:
+        utils.print_dict(att)

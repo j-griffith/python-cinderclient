@@ -192,6 +192,28 @@ class Volume(base.Resource):
         """Show pool information for backends."""
         return self.manager.get_pools(detail)
 
+    def create_attachment(self, volume, connector, instance_uuid, mountpoint,
+                          no_connect=False):
+        """Create an attachment for the specified volume.
+
+        :param volume: The :class:`Volume` (or its ID).
+        :param connector: connector dict from nova.
+        :param instance_uuid: UUID of the Instance being attached to
+        :param mountpoint: Mountpoin on the Instance being attached to
+        """
+        return self.manager.create_attachment(self, connector, instance_uuid,
+                                              mountpoint, no_connect=no_connect)
+
+    def remove_attachment(self, volume, connector, instance_uuid, mountpoint):
+        """Remove an attachment for the specified volume.
+
+        :param volume: The :class:`Volume` (or its ID).
+        :param connector: connector dict from nova.
+        :param connector: connector dict from nova.
+        :param instance_uuid: UUID of the Instance being attached to
+        """
+        return self.manager.remove_attachment(self, connector)
+
 
 class VolumeManager(base.ManagerWithFind):
     """Manage :class:`Volume` resources."""
@@ -621,3 +643,49 @@ class VolumeManager(base.ManagerWithFind):
             query_string = "?detail=True"
 
         return self._get('/scheduler-stats/get_pools%s' % query_string, None)
+
+    def create_attachment(self, volume, connector, instance_uuid, mountpoint,
+                          no_connect=False):
+        """Create a volume attachment.
+
+        :param volume: The :class:`Volume` (or its ID).
+        :param connector: connector dict from nova.
+        :param instance_uuid: UUID of the Instance being attached to.
+        :param mountpoint: The mountpoint on the Instance being attached to.
+        """
+        resp, body = self._action('os-create_attachment', volume,
+                                  {'connector': connector,
+                                   'instance_uuid': instance_uuid,
+                                   'mountpoint': mountpoint,
+                                   'no_connect': no_connect})
+        return common_base.DictWithMeta(body['connection_info'], resp)
+
+    def remove_attachment(self, volume, connector, instance_uuid, mountpoint):
+        """Remove a volume attachment.
+
+        :param volume: The :class:`Volume` (or its ID).
+        :param connector: connector dict from nova.
+        :param instance_uuid: UUID of the Instance being attached to.
+        :param mountpoint: The mountpoint on the Instance being attached to.
+        """
+        # atts = self._action('os-remove_attachment', volume,
+        #                     {'connector': connector,
+        #                      'instance_uuid': instance_uuid,
+        #                      'mountpoint': mountpoint})
+        # return atts
+        resp, body = self._action('os-remove_attachment', volume,
+                                  {'connector': connector,
+                                   'instance_uuid': instance_uuid,
+                                   'mountpoint': mountpoint})
+        return common_base.DictWithMeta(body['attachments'], resp)
+
+    def list_attachments(self, volume):
+        """List active attachments for the specified volume.
+
+        :param volume: The :class:`Volume` (or its ID).
+        """
+        results = []
+        resp, body = self._action('os-list_attachments', volume)
+        for att in body['attachments']:
+            results.append(common_base.DictWithMeta(att, resp))
+        return results
